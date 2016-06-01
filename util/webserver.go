@@ -2,13 +2,14 @@ package util
 
 import (
 	"fmt"
-	"github.com/gorilla/context"
-	"github.com/gorilla/sessions"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/sessions"
 )
 
 var output_channel chan string

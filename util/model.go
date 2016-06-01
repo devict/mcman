@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/boltdb/bolt"
 	"log"
 	"time"
+
+	"github.com/boltdb/bolt"
 )
 
 type Model struct {

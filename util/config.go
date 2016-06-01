@@ -2,9 +2,10 @@ package util
 
 import (
 	"fmt"
-	"github.com/antonholmquist/jason"
 	"io/ioutil"
 	"strings"
+
+	"github.com/antonholmquist/jason"
 )
 
 type Config struct {

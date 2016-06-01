@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"gogs.bullercodeworks.com/brian/mc_man/util"
 	"log"
 	"os"
 	"os/exec"
 	"time"
+
+	"gogs.bullercodeworks.com/brian/mc_man/util"
 )
 
 func main() {
