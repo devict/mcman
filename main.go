@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var output = make(chan string)
+
 func main() {
 	xmx := flag.String("xmx", "1024M", "The Maximum Memory Allocation Pool for the JVM")
 	xms := flag.String("xms", "1024M", "The Initial Memory Allocation Pool")
@@ -41,7 +43,6 @@ func main() {
 	}
 
 	// Build a string channel for stdout
-	ch := make(chan string)
 
 	// And a routine to keep the channel updated
 	go func() {
@@ -50,7 +51,7 @@ func main() {
 			n, err := stdout.Read(buf)
 			if n != 0 {
 				// Something there throw it into the channel
-				ch <- string(buf[:n])
+				output <- string(buf[:n])
 			}
 			if err != nil {
 				fmt.Print("Caught: ", err, "\n")
@@ -61,7 +62,7 @@ func main() {
 		fmt.Println("mcman stopping")
 
 		DoStopServer()
-		close(ch)
+		close(output)
 	}()
 
 	// Load the Config
@@ -69,11 +70,7 @@ func main() {
 	LoadConfig(&mm, *dir)
 
 	go func() {
-		for {
-			s, ok := <-ch
-			if !ok {
-				break
-			}
+		for s := range output {
 			m := NewMessage(s)
 			fmt.Printf("\x1b[34;1m%s\x1b[0m", m.Output())
 			mm.ProcessMessage(s)
@@ -82,7 +79,7 @@ func main() {
 
 	// Web Server Routine
 	go func() {
-		StartServer(ch)
+		StartServer(true)
 	}()
 
 	// Catch interrupt signals and gracefully stop the servers

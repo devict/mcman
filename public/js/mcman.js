@@ -2,7 +2,7 @@
 	B('#stop_link').on('click',function(){
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){console.log(this.responseText);};
-		oReq.open("get", "/admin/api/v1/stop", true);
+		oReq.open("post", "/api/v1/stop", true);
 		oReq.send();
 	});
 	var menu=B('#menu'),
