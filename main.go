@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -82,9 +85,19 @@ func main() {
 		StartServer(ch)
 	}()
 
+	// Catch interrupt signals and gracefully stop the servers
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		fmt.Println("Caught signal", sig)
+		DoStopServer()
+	}()
+
 	// The forever loop to monitor everything
 	for {
 		time.Sleep(time.Second)
+
 		mu.Lock()
 		if StopServer {
 			mu.Unlock()
