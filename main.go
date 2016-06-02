@@ -6,8 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"gogs.bullercodeworks.com/brian/mc_man/util"
 )
 
 func main() {
@@ -68,13 +66,13 @@ func main() {
 			}
 		}
 		fmt.Println("mc_man stopped")
-		util.StopServer = true
+		StopServer = true
 		close(ch)
 	}()
 
 	// Load the Config
-	mm := util.NewManager(stdin)
-	util.LoadConfig(&mm)
+	mm := NewManager(stdin)
+	LoadConfig(&mm)
 
 	go func() {
 		for {
@@ -82,7 +80,7 @@ func main() {
 			if !ok {
 				break
 			}
-			m := util.NewMessage(s)
+			m := NewMessage(s)
 			fmt.Printf("\x1b[34;1m%s\x1b[0m", m.Output())
 			mm.ProcessMessage(s)
 		}
@@ -90,17 +88,17 @@ func main() {
 
 	// Web Server Routine
 	go func() {
-		util.StartServer(ch)
+		StartServer(ch)
 	}()
 
 	// The forever loop to monitor everything
 	for {
 		time.Sleep(time.Second)
-		if util.StopServer {
+		if StopServer {
 			break
 		}
-		//		fmt.Printf("Monitoring... (%d users)\n", len(util.GetConfig().LoggedInUsers))
-		//		for i, u := range util.GetConfig().LoggedInUsers {
+		//		fmt.Printf("Monitoring... (%d users)\n", len(GetConfig().LoggedInUsers))
+		//		for i, u := range GetConfig().LoggedInUsers {
 		//			if !u.HasQuota() {
 		//				fmt.Printf(">> User %s is out of quota\n", u.Name)
 		//			}
