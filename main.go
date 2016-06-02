@@ -63,7 +63,7 @@ func main() {
 
 	// Load the Config
 	mm := NewManager(stdin)
-	LoadConfig(&mm)
+	LoadConfig(&mm, *dir)
 
 	go func() {
 		for {

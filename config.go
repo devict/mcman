@@ -22,6 +22,7 @@ type Config struct {
 	Whitelist       []string
 	Ops             []string
 	TeleportPoints  map[string]string
+	dir             string
 	model           *Model
 }
 
@@ -32,14 +33,14 @@ var mu sync.Mutex
 
 var message_manager *MessageManager
 
-func LoadConfig(mm *MessageManager) {
+func LoadConfig(mm *MessageManager, dir string) {
 	message_manager = mm
 	c = new(Config)
-
+	c.dir = dir
 	c.model = InitializeModel()
 
 	// Load the whitelist
-	whitelist_rd, err := ioutil.ReadFile("whitelist.json")
+	whitelist_rd, err := ioutil.ReadFile(c.dir + "/whitelist.json")
 	// We have to make it an object to read it...
 	whitelist_rd = append(append([]byte("{\"whitelist\":"), whitelist_rd...), '}')
 	if err == nil {
@@ -53,7 +54,7 @@ func LoadConfig(mm *MessageManager) {
 	}
 
 	// Load the Op list
-	oplist_rd, err := ioutil.ReadFile("ops.json")
+	oplist_rd, err := ioutil.ReadFile(c.dir + "/ops.json")
 	// We have to make it an object to read it...
 	oplist_rd = append(append([]byte("{\"ops\":"), oplist_rd...), '}')
 	if err == nil {
@@ -66,7 +67,7 @@ func LoadConfig(mm *MessageManager) {
 		}
 	}
 
-	config_str, err := ioutil.ReadFile("mcman.config")
+	config_str, err := ioutil.ReadFile(c.dir + "/mcman.config")
 	if err == nil {
 		j, _ := jason.NewObjectFromBytes(config_str)
 		o, _ := j.GetObjectArray("options")
@@ -484,7 +485,7 @@ func WriteConfig() {
 	}
 	d = d + "]}"
 	do := []byte(d)
-	ioutil.WriteFile("mcman.config", do, 0664)
+	ioutil.WriteFile(c.dir+"/mcman.config", do, 0664)
 }
 
 func SetHome(user, loc string) {
