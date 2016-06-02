@@ -14,7 +14,7 @@ func main() {
 	args := os.Args[1:]
 	if len(args) > 0 {
 		if args[0] == "-help" {
-			fmt.Println("Usage: mc_man <Xmx Value> <Xms Value>")
+			fmt.Println("Usage: mcman <Xmx Value> <Xms Value>")
 			fmt.Println("	<Xmx Value> - The Maximum Memory Allocation Pool for the JVM")
 			fmt.Println("	<Xms Value> - The Initial Memory Allocation Pool")
 			os.Exit(0)
@@ -65,7 +65,7 @@ func main() {
 				break
 			}
 		}
-		fmt.Println("mc_man stopped")
+		fmt.Println("mcman stopped")
 		StopServer = true
 		close(ch)
 	}()

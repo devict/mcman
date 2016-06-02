@@ -36,7 +36,7 @@ func InitializeModel() *Model {
 	ret.user_prefix = "user_"
 	ret.config_feature_prefix = "feature_"
 
-	ret.db, err = bolt.Open("mc_man.db", 0600, nil)
+	ret.db, err = bolt.Open("mcman.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

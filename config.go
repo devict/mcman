@@ -62,7 +62,7 @@ func LoadConfig(mm *MessageManager) {
 		}
 	}
 
-	config_str, err := ioutil.ReadFile("mc_man.config")
+	config_str, err := ioutil.ReadFile("mcman.config")
 	if err == nil {
 		j, _ := jason.NewObjectFromBytes(config_str)
 		o, _ := j.GetObjectArray("options")
@@ -336,7 +336,7 @@ func LoadConfig(mm *MessageManager) {
 			// Add !help listener
 			AddListener(func(i *Message) bool {
 				if i.MCUser.Name != "" && i.Text == "!help\n" {
-					mm.Tell(i.MCUser.Name, "-=( mc_man Manager Help )=-", "blue")
+					mm.Tell(i.MCUser.Name, "-=( mcman Manager Help )=-", "blue")
 					numFeatures := 0
 					if c.FeatureTPHome == true {
 						numFeatures++
@@ -354,7 +354,7 @@ func LoadConfig(mm *MessageManager) {
 						mm.Tell(i.MCUser.Name, "!time night -- Ask the server to time the time to 'night'.", "white")
 					}
 					if numFeatures == 0 {
-						mm.Tell(i.MCUser.Name, "mc_man currently has no user features loaded.", "white")
+						mm.Tell(i.MCUser.Name, "mcman currently has no user features loaded.", "white")
 					}
 					mm.Tell(i.MCUser.Name, "-=========================-", "blue")
 					return true
@@ -429,7 +429,7 @@ func WriteConfig() {
 	c.model.mcSaveFeature("tp", c.FeatureTP)
 	c.model.mcSaveFeature("daynight", c.FeatureDayNight)
 
-	// TODO: Make mc_man aware of the world
+	// TODO: Make mcman aware of the world
 	// Generate the JSON string for the config file
 	d := "{\"options\":["
 	// Output options array
@@ -478,7 +478,7 @@ func WriteConfig() {
 	}
 	d = d + "]}"
 	do := []byte(d)
-	ioutil.WriteFile("mc_man.config", do, 0664)
+	ioutil.WriteFile("mcman.config", do, 0664)
 }
 
 func SetHome(user, loc string) {
