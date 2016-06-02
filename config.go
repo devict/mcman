@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
 
 	"github.com/antonholmquist/jason"
 )
@@ -25,7 +26,10 @@ type Config struct {
 }
 
 var c *Config
+
 var StopServer = false
+var mu sync.Mutex
+
 var message_manager *MessageManager
 
 func LoadConfig(mm *MessageManager) {
@@ -387,10 +391,12 @@ func LoadConfig(mm *MessageManager) {
 }
 
 func DoStopServer() {
+	mu.Lock()
 	message_manager.Output("stop")
 	WriteConfig()
 	c.model.closeDatabase()
 	StopServer = true
+	mu.Unlock()
 }
 
 func LoginMCUser(u MCUser) {

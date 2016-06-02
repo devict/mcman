@@ -1,34 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"time"
 )
 
 func main() {
-	xmxVal := "1024M"
-	xmsVal := "1024M"
-	args := os.Args[1:]
-	if len(args) > 0 {
-		if args[0] == "-help" {
-			fmt.Println("Usage: mcman <Xmx Value> <Xms Value>")
-			fmt.Println("	<Xmx Value> - The Maximum Memory Allocation Pool for the JVM")
-			fmt.Println("	<Xms Value> - The Initial Memory Allocation Pool")
-			os.Exit(0)
-		}
-		if len(args) > 0 {
-			xmxVal = args[0]
-			if len(args) > 1 {
-				xmsVal = args[1]
-			}
-		}
-	}
+	xmx := flag.String("xmx", "1024M", "The Maximum Memory Allocation Pool for the JVM")
+	xms := flag.String("xms", "1024M", "The Initial Memory Allocation Pool")
+	dir := flag.String("dir", ".", "Path to the MC server directory")
+	jar := flag.String("jar", "minecraft_server.jar", "Path to the MC server JAR relative from -dir")
+
+	flag.Parse()
 
 	// The minecraft server command
-	cmd := exec.Command("java", "-Xmx"+xmxVal, "-Xms"+xmsVal, "-jar", "minecraft_server.jar", "nogui")
+	cmd := exec.Command("java", "-Xmx"+*xmx, "-Xms"+*xms, "-d64", "-jar", *jar, "nogui")
+	cmd.Dir = *dir
 
 	// Control StdIn
 	stdin, err := cmd.StdinPipe()
@@ -65,8 +55,9 @@ func main() {
 				break
 			}
 		}
-		fmt.Println("mcman stopped")
-		StopServer = true
+		fmt.Println("mcman stopping")
+
+		DoStopServer()
 		close(ch)
 	}()
 
@@ -94,9 +85,12 @@ func main() {
 	// The forever loop to monitor everything
 	for {
 		time.Sleep(time.Second)
+		mu.Lock()
 		if StopServer {
+			mu.Unlock()
 			break
 		}
+		mu.Unlock()
 		//		fmt.Printf("Monitoring... (%d users)\n", len(GetConfig().LoggedInUsers))
 		//		for i, u := range GetConfig().LoggedInUsers {
 		//			if !u.HasQuota() {
