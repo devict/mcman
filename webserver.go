@@ -16,7 +16,7 @@ type WebUser struct {
 	Password string
 }
 
-var session_store = sessions.NewCookieStore([]byte("super_secret_secret :D"))
+var sessionStore = sessions.NewCookieStore([]byte("super_secret_secret :D"))
 
 var v view
 
@@ -48,6 +48,15 @@ func StartServer(dev bool) {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
+	session, err := sessionStore.Get(r, "mcman_session")
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+	isLoggedIn := session.Values["is_logged_in"]
+	if isLoggedIn == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	t := v.Tmpl("index")
 	fmt.Println(t.Execute(w, nil))
 }
@@ -64,10 +73,12 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 	lu := c.model.getWebUser(login_user)
 
 	if login_pass == lu.Password {
-		session, _ := session_store.Get(r, "mcman_session")
+		session, _ := sessionStore.Get(r, "mcman_session")
 		session.Values["is_logged_in"] = login_user
 		session.Save(r, w)
 	}
+	t := v.Tmpl("index")
+	fmt.Println(t.Execute(w, nil))
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -90,7 +101,7 @@ func getJSON(mid func(http.ResponseWriter, *http.Request) string,
 
 func getAuthJSON(mid func(http.ResponseWriter, *http.Request) string,
 	w http.ResponseWriter, r *http.Request) string {
-	session, _ := session_store.Get(r, "mcman_session")
+	session, _ := sessionStore.Get(r, "mcman_session")
 
 	// Vaildate that the session is authenticated
 	if val, ok := session.Values["is_logged_in"].(string); ok {
