@@ -1,3 +1,4 @@
 mcman
 *.db
 *.jar
+mcman.config
