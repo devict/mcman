@@ -70,7 +70,7 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 	login_user := r.FormValue("username")
 	login_pass := r.FormValue("password")
 
-	lu := c.model.getWebUser(login_user)
+	lu, _ := c.model.getWebUser(login_user)
 
 	if login_pass == lu.Password {
 		session, _ := sessionStore.Get(r, "mcman_session")

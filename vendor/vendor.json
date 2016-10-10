@@ -1,0 +1,61 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "eJnRcsKURZGAnRl26GArICawCb8=",
+			"path": "github.com/antonholmquist/jason",
+			"revision": "68e75fc5edb0504b2d80699f01cd7e6df7f555aa",
+			"revisionTime": "2015-01-16T08:36:13Z"
+		},
+		{
+			"checksumSHA1": "mH8WWfUSM+DR8MAg9mDpcf6gZj0=",
+			"path": "github.com/boltdb/bolt",
+			"revision": "f0d021274dede8e672f17a2dbcb997c5f0760c41",
+			"revisionTime": "2016-10-03T19:08:47Z"
+		},
+		{
+			"checksumSHA1": "ugfLOyEBPoc0ePAbV4hdYndjoZU=",
+			"path": "github.com/br0xen/boltease",
+			"revision": "e17c81af9dc0390e66913ae5186843266e9d8193",
+			"revisionTime": "2016-10-10T14:29:41Z"
+		},
+		{
+			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
+			"path": "github.com/gorilla/context",
+			"revision": "215affda49addc4c8ef7e2534915df2c8c35c6cd",
+			"revisionTime": "2014-12-17T16:02:51Z"
+		},
+		{
+			"checksumSHA1": "2jetU+Kr3o8W2McDw2UIipdaYoM=",
+			"path": "github.com/gorilla/mux",
+			"revision": "49c024275504f0341e5a9971eb7ba7fa3dc7af40",
+			"revisionTime": "2015-09-08T16:58:39Z"
+		},
+		{
+			"checksumSHA1": "jbyy1WlWbEtYfMbzKhlKlVmokMw=",
+			"path": "github.com/gorilla/securecookie",
+			"revision": "8e98dd730fc43f1383f19615db6f2e702c9738e8",
+			"revisionTime": "2015-03-27T15:58:05Z"
+		},
+		{
+			"checksumSHA1": "+nUrErawD+edg74PjL4kx6b4A78=",
+			"path": "github.com/gorilla/sessions",
+			"revision": "f61c3ec2cf65d69e7efedfd4d060fe128882c951",
+			"revisionTime": "2015-04-17T17:47:05Z"
+		},
+		{
+			"checksumSHA1": "9C4Av3ypK5pi173F76ogJT/d8x4=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "bde08f269ed27dc9a9c105465110825e04ab3d41",
+			"revisionTime": "2016-09-18T08:01:53Z"
+		},
+		{
+			"checksumSHA1": "vu7njn8O4vhFtmgGWntwjA2NAbk=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9",
+			"revisionTime": "2016-09-14T20:33:16Z"
+		}
+	],
+	"rootPath": "github.com/br0xen/mcman"
+}
