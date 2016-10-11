@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 	"sync"
+	"time"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/antonholmquist/jason"
 )
@@ -17,8 +23,7 @@ type Config struct {
 	FeatureTPVisit  bool
 	FeatureTP       bool
 	FeatureDayNight bool
-	MCUsers         []*MCUser
-	LoggedInMCUsers []*MCUser
+	LoggedInMCUsers []MCUser
 	Whitelist       []string
 	Ops             []string
 	TeleportPoints  map[string]string
@@ -38,6 +43,30 @@ func LoadConfig(mm *MessageManager, dir string) {
 	c = new(Config)
 	c.dir = dir
 	c.model = InitializeModel()
+	// If we don't have any web users yet, we need to create one
+	allUsers := c.model.getAllWebUsers()
+	if len(allUsers) == 0 {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Println("Create new Web User")
+		fmt.Print("Username: ")
+		uName, _ := reader.ReadString('\n')
+		uName = strings.TrimSpace(uName)
+		var pw1, pw2 []byte
+		for string(pw1) != string(pw2) || string(pw1) == "" {
+			fmt.Print("Password: ")
+			pw1, _ = terminal.ReadPassword(0)
+			fmt.Println("")
+			fmt.Print("Repeat Password: ")
+			pw2, _ = terminal.ReadPassword(0)
+			fmt.Println("")
+			if string(pw1) != string(pw2) {
+				fmt.Println("Entered Passwords didn't match!")
+			}
+		}
+		if err := c.model.updateWebUser(&WebUser{Username: uName, Password: string(pw1)}); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	// Load the whitelist
 	whitelist_rd, err := ioutil.ReadFile(c.dir + "/whitelist.json")
@@ -75,7 +104,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 		// Add the "Stop" listener
 		fmt.Println("> Activating 'stop' listener")
 		AddListener(func(i *Message) bool {
-			if i.MCUser.IsOp && i.Text == "!stop\n" {
+			if i.MCUser != nil && i.Text == "!stop\n" {
 				DoStopServer()
 				return true
 			}
@@ -87,7 +116,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 			fmt.Println("> Activating 'home' listeners")
 			// Add !set home listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser.Name != "" && i.Text == "!set home\n" {
+				if i.MCUser != nil && i.Text == "!set home\n" {
 					AddTempListener(func(inp *Message) bool {
 						listen_for := "Teleported " + i.MCUser.Name + " to "
 						if inp.MCUser.Name == "" && strings.Contains(inp.Text, listen_for) {
@@ -97,7 +126,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 								p_str := r[1]
 								p_str = strings.Replace(p_str, ",", "", -1)
 								p_str = strings.Replace(p_str, "\n", "", -1)
-								SetHome(i.MCUser.Name, p_str)
+								/* TODO: Update User's Home in DB */
 								mm.Tell(i.MCUser.Name, "Set your home to "+p_str, "blue")
 								return true
 							}
@@ -111,8 +140,9 @@ func LoadConfig(mm *MessageManager, dir string) {
 			})
 			// Add !home listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser.Name != "" && i.Text == "!home\n" {
-					home_str, found := GetHome(i.MCUser.Name)
+				if i.MCUser != nil && i.Text == "!home\n" {
+					// TODO: Lookup home in DB
+					home_str, found := "", false
 					if found {
 						mm.Output("tp " + i.MCUser.Name + " " + home_str)
 					} else {
@@ -184,7 +214,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 									if len(r) > 0 {
 										p_str := r[1]
 										p_str = strings.Replace(p_str, ",", "", -1)
-										SetPorch(i.MCUser.Name, p_str)
+										// TODO: Set Porch in DB
 										mm.Tell(i.MCUser.Name, "Set your porch to "+p_str, "blue")
 										return true
 									}
@@ -203,7 +233,8 @@ func LoadConfig(mm *MessageManager, dir string) {
 							r := strings.Split(strings.Replace(i.Text, "\n", "", -1), "!visit ")
 							if len(r) > 0 {
 								username := r[1]
-								porch_str, found := GetPorch(username)
+								// TODO: Get Porch from DB
+								porch_str, found := "", false
 								if found {
 									mm.Output("tp " + i.MCUser.Name + " " + porch_str)
 								} else {
@@ -237,7 +268,8 @@ func LoadConfig(mm *MessageManager, dir string) {
 					AddListener(func(i *Message) bool {
 						if i.MCUser.Name != "" && strings.HasPrefix(i.Text, "!tp ") {
 							tp_name := strings.Split(i.Text, " ")[1]
-							tp_str, found := GetTPPoint(tp_name)
+							// TODO: Get Teleport Point from DB
+							tp_str, found := "", false
 							if found {
 								mm.Output("tp " + i.MCUser.Name + " " + tp_str)
 							} else {
@@ -259,7 +291,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 									if len(r) > 0 {
 										p_str := r[1]
 										p_str = strings.Replace(p_str, ",", "", -1)
-										SetTPPoint(tp_name, p_str)
+										// TODO: Set the Teleport Point in the DB
 										mm.Tell(i.MCUser.Name, "Added TP Point "+tp_name+" at "+p_str, "blue")
 										return true
 									}
@@ -300,7 +332,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 			}
 			// Add login listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser.Name == "" && strings.Contains(i.Text, " logged in with entity id ") {
+				if i.MCUser != nil && strings.Contains(i.Text, " logged in with entity id ") {
 					// TODO: User Logged in Function
 					// Find the user that just logged in
 					r := strings.Split(i.Text, "]: ")
@@ -311,7 +343,15 @@ func LoadConfig(mm *MessageManager, dir string) {
 						if len(r) > 0 {
 							find = r[0]
 							// find should be the user name now
-							LoginMCUser(*FindMCUser(find, true))
+							var u *MCUser
+							var err error
+							if u, err = c.model.getMCUser(find); err != nil {
+								// user doesn't exist, create it
+								u = new(MCUser)
+								u.Name = find
+							}
+							u.loginTime = time.Now()
+							c.model.updateMCUser(u)
 							return true
 						}
 					}
@@ -320,7 +360,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 			})
 			// Add logout listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser.Name == "" && strings.Contains(i.Text, " lost connection: ") {
+				if i.MCUser == nil && strings.Contains(i.Text, " lost connection: ") {
 					// Find the user that just logged out
 					r := strings.Split(i.Text, "]: ")
 					find := ""
@@ -330,7 +370,15 @@ func LoadConfig(mm *MessageManager, dir string) {
 						if len(r) > 0 {
 							find = r[0]
 							// find should be the user name now
-							LogoutMCUser(*FindMCUser(find, false))
+							var u *MCUser
+							var err error
+							if u, err = c.model.getMCUser(find); err != nil {
+								// user doesn't exist, create it
+								u = new(MCUser)
+								u.Name = find
+							}
+							u.logoutTime = time.Now()
+							c.model.updateMCUser(u)
 							return true
 						}
 					}
@@ -340,7 +388,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 
 			// Add !help listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser.Name != "" && i.Text == "!help\n" {
+				if i.MCUser != nil && i.Text == "!help\n" {
 					mm.Tell(i.MCUser.Name, "-=( mcman Manager Help )=-", "blue")
 					numFeatures := 0
 					if c.FeatureTPHome == true {
@@ -368,26 +416,11 @@ func LoadConfig(mm *MessageManager, dir string) {
 			})
 		}
 
-		c.MCUsers = make([]*MCUser, 0, 10)
-		u, _ := j.GetObjectArray("users")
-		for _, user := range u {
-			user_name, err := user.GetString("name")
-			if err == nil && user_name != "" {
-				user_home, _ := user.GetString("home")
-				user_porch, _ := user.GetString("porch")
-				us := NewMCUser(user_name)
-				for _, un := range c.Ops {
-					if un == user_name {
-						us.IsOp = true
-					}
-				}
-				us.Home = user_home
-				us.Porch = user_porch
-				c.model.updateMcUser(us)
-				c.MCUsers = append(c.MCUsers, us)
-			}
+		if allUsers, err := c.model.getAllMCUsers(); err != nil {
+			fmt.Printf("> Error loading users: " + err.Error())
+		} else {
+			fmt.Printf("> Loaded %d Users\n", len(allUsers))
 		}
-		fmt.Printf("> Loaded %d Users\n", len(c.MCUsers))
 	}
 }
 
@@ -395,38 +428,30 @@ func DoStopServer() {
 	mu.Lock()
 	message_manager.Output("stop")
 	WriteConfig()
-	c.model.closeDatabase()
 	StopServer = true
 	mu.Unlock()
 }
 
-func LoginMCUser(u MCUser) {
+func LoginMCUser(u *MCUser) {
 	for _, user := range c.LoggedInMCUsers {
 		if user.Name == u.Name {
 			// User is already logged in
 			return
 		}
 	}
-	c.LoggedInMCUsers = append(c.LoggedInMCUsers, &u)
+	u.loginTime = time.Now()
+	c.model.updateMCUser(u)
+	c.LoggedInMCUsers = append(c.LoggedInMCUsers, *u)
 }
 
-func LogoutMCUser(u MCUser) {
+func LogoutMCUser(u *MCUser) {
 	for idx, user := range c.LoggedInMCUsers {
 		if user.Name == u.Name {
-			t := append(c.LoggedInMCUsers[:idx], c.LoggedInMCUsers[idx+1:]...)
-			c.LoggedInMCUsers = make([]*MCUser, len(t))
-			copy(c.LoggedInMCUsers, t)
+			u.logoutTime = time.Now()
+			c.model.updateMCUser(u)
+			c.LoggedInMCUsers = append(c.LoggedInMCUsers[:idx], c.LoggedInMCUsers[idx+1:]...)
 			return
 		}
-	}
-}
-
-func AddMCUser(username string) {
-	if username != "" {
-		us := NewMCUser(username)
-		fmt.Println("Adding new user: " + username)
-		c.MCUsers = append(c.MCUsers, us)
-		WriteConfig()
 	}
 }
 
@@ -473,65 +498,14 @@ func WriteConfig() {
 	} else {
 		d = d + "false"
 	}
-	d = d + "}],\"users\":["
-	// Output users array
-	num_users := 0
-	for _, u := range c.MCUsers {
-		if num_users > 0 {
-			d = d + ","
-		}
-		d = d + u.ToJSONString()
-		num_users++
-	}
-	d = d + "]}"
+	d = d + "}]}"
 	do := []byte(d)
 	ioutil.WriteFile(c.dir+"/mcman.config", do, 0664)
 }
 
-func SetHome(user, loc string) {
-	u := FindMCUser(user, true)
-	if u.Index != -1 {
-		u.Home = strings.Replace(loc, "\n", "", -1)
-		// Replace the user in the Users array
-		c.MCUsers[u.Index] = u
-		WriteConfig()
-	}
-}
-
-func GetHome(user string) (string, bool) {
-	u := FindMCUser(user, false)
-	if u.Index == -1 || u.Home == "" {
-		return "", false
-	}
-	return u.Home, true
-}
-
-func SetPorch(user, loc string) {
-	u := FindMCUser(user, true)
-	if u.Index != -1 {
-		u.Porch = strings.Replace(loc, "\n", "", -1)
-		c.MCUsers[u.Index] = u
-		WriteConfig()
-	}
-}
-
-func GetPorch(user string) (string, bool) {
-	u := FindMCUser(user, false)
-	if u.Index == -1 || u.Porch == "" {
-		return "", false
-	}
-	return u.Porch, true
-}
-
-func SetTPPoint(tp_name, loc string) {
-	c.TeleportPoints[tp_name] = loc
-}
-
-func GetTPPoint(tp_name string) (string, bool) {
-	ret := c.TeleportPoints[tp_name]
-	return ret, (ret != "")
-}
-
+/*
+// TODO: This functions should be performed directly on the DB
+// from the listener
 func FindMCUser(name string, create bool) *MCUser {
 	for _, user := range c.MCUsers {
 		if user.Name == name {
@@ -539,11 +513,11 @@ func FindMCUser(name string, create bool) *MCUser {
 		}
 	}
 	if create && name != "" {
-		AddMCUser(name)
 		return FindMCUser(name, false)
 	}
 	return NewMCUser("")
 }
+*/
 
 func GetConfig() *Config {
 	return c
