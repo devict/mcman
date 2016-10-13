@@ -11,9 +11,9 @@ type MCUser struct {
 	Home       string
 	Porch      string
 	Quota      time.Duration
-	quotaUsed  time.Duration
-	loginTime  time.Time
-	logoutTime time.Time
+	QuotaUsed  time.Duration
+	LoginTime  time.Time
+	LogoutTime time.Time
 }
 
 func NewMCUser(nm string) *MCUser {
@@ -27,7 +27,7 @@ func NewMCUser(nm string) *MCUser {
 
 func (u *MCUser) HasQuota() bool {
 	if u.Quota > 0 {
-		return u.quotaUsed < u.Quota
+		return u.QuotaUsed < u.Quota
 	} else {
 		return true
 	}
@@ -35,7 +35,7 @@ func (u *MCUser) HasQuota() bool {
 
 func (u *MCUser) RemainingQuota() time.Duration {
 	if u.Quota > 0 {
-		return u.Quota - u.quotaUsed
+		return u.Quota - u.QuotaUsed
 	} else {
 		return 0
 	}

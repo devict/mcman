@@ -178,6 +178,35 @@ func (m *Model) getAllMCUsers() ([]MCUser, error) {
 	return ret, err
 }
 
+func (m *Model) getOnlineMCUsers() ([]MCUser, error) {
+	var ret []MCUser
+	var err error
+	if err = m.db.OpenDB(); err != nil {
+		// TODO: Log/output the error
+		return ret, err
+	}
+	defer m.db.CloseDB()
+
+	userBkts, err := m.db.GetBucketList(m.mcUsersBucket)
+	if err != nil {
+		// TODO: Log/output error
+		return ret, err
+	}
+	for i := range userBkts {
+		userBktPath := append(m.mcUsersBucket, userBkts[i])
+		var ld *MCUser
+		if ld, err = m.getMCUserFromPath(userBktPath); err != nil {
+			continue
+		}
+		// Check if ld.LogoutTime < ld.LoginTime
+		if ld.LogoutTime.Unix() < ld.LoginTime.Unix() {
+			ret = append(ret, *ld)
+		}
+	}
+
+	return ret, err
+}
+
 func (m *Model) getMCUser(nm string) (*MCUser, error) {
 	userBktPath := append(m.mcUsersBucket, m.userPrefix+nm)
 	return m.getMCUserFromPath(userBktPath)
@@ -212,10 +241,13 @@ func (m *Model) getMCUserFromPath(pth []string) (*MCUser, error) {
 	if tmpInt, err = m.db.GetInt(pth, "quotaused"); err != nil {
 		return nil, err
 	}
-	if ret.loginTime, err = m.db.GetTimestamp(pth, "logintime"); err != nil {
+	ret.QuotaUsed = time.Duration(tmpInt)
+	if ret.LoginTime, err = m.db.GetTimestamp(pth, "logintime"); err != nil {
 		return nil, err
 	}
-	ret.quotaUsed = time.Duration(tmpInt)
+	if ret.LogoutTime, err = m.db.GetTimestamp(pth, "logouttime"); err != nil {
+		return nil, err
+	}
 	return ret, err
 }
 
@@ -243,13 +275,13 @@ func (m *Model) updateMCUser(u *MCUser) error {
 	if err = m.db.SetInt(userBktPath, "quota", tmpInt); err != nil {
 		return err
 	}
-	tmpInt = int(u.quotaUsed)
+	tmpInt = int(u.QuotaUsed)
 	if err = m.db.SetInt(userBktPath, "quotaused", tmpInt); err != nil {
 		return err
 	}
-	if err = m.db.SetTimestamp(userBktPath, "logintime", u.loginTime); err != nil {
+	if err = m.db.SetTimestamp(userBktPath, "logintime", u.LoginTime); err != nil {
 		return err
 	}
-	err = m.db.SetTimestamp(userBktPath, "logouttime", u.logoutTime)
+	err = m.db.SetTimestamp(userBktPath, "logouttime", u.LogoutTime)
 	return err
 }
