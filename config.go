@@ -26,7 +26,6 @@ type Config struct {
 	LoggedInMCUsers []MCUser
 	Whitelist       []string
 	Ops             []string
-	TeleportPoints  map[string]string
 	dir             string
 	model           *Model
 }
@@ -246,21 +245,6 @@ func LoadConfig(mm *MessageManager, dir string) {
 					})
 				}
 			} else if opt_name == "teleport" {
-				// The 'teleport to spawn' listener
-				c.TeleportPoints = make(map[string]string)
-				// Load all of the teleport points
-				if point_array, err := option.GetObjectArray("points"); err == nil {
-					if len(point_array) > 0 {
-						for k := range point_array {
-							if tp_name, err := point_array[k].GetString("name"); err == nil {
-								if tp_loc, err := point_array[k].GetString("location"); err == nil {
-									c.TeleportPoints[tp_name] = tp_loc
-								}
-							}
-						}
-					}
-				}
-
 				c.FeatureTP = opt_enabled
 				if opt_enabled {
 					fmt.Println("> Activating 'teleport' listener")
@@ -332,7 +316,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 			}
 			// Add login listener
 			AddListener(func(i *Message) bool {
-				if i.MCUser != nil && strings.Contains(i.Text, " logged in with entity id ") {
+				if i.MCUser == nil && strings.Contains(i.Text, " logged in with entity id ") {
 					// TODO: User Logged in Function
 					// Find the user that just logged in
 					r := strings.Split(i.Text, "]: ")
@@ -350,7 +334,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 								u = new(MCUser)
 								u.Name = find
 							}
-							u.loginTime = time.Now()
+							u.LoginTime = time.Now()
 							c.model.updateMCUser(u)
 							return true
 						}
@@ -377,7 +361,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 								u = new(MCUser)
 								u.Name = find
 							}
-							u.logoutTime = time.Now()
+							u.LogoutTime = time.Now()
 							c.model.updateMCUser(u)
 							return true
 						}
@@ -427,32 +411,16 @@ func LoadConfig(mm *MessageManager, dir string) {
 func DoStopServer() {
 	mu.Lock()
 	message_manager.Output("stop")
+	// Mark all Online users as Logged Out
+	if ou, err := c.model.getOnlineMCUsers(); err == nil {
+		for i := range ou {
+			ou[i].LogoutTime = time.Now()
+			c.model.updateMCUser(&ou[i])
+		}
+	}
 	WriteConfig()
 	StopServer = true
 	mu.Unlock()
-}
-
-func LoginMCUser(u *MCUser) {
-	for _, user := range c.LoggedInMCUsers {
-		if user.Name == u.Name {
-			// User is already logged in
-			return
-		}
-	}
-	u.loginTime = time.Now()
-	c.model.updateMCUser(u)
-	c.LoggedInMCUsers = append(c.LoggedInMCUsers, *u)
-}
-
-func LogoutMCUser(u *MCUser) {
-	for idx, user := range c.LoggedInMCUsers {
-		if user.Name == u.Name {
-			u.logoutTime = time.Now()
-			c.model.updateMCUser(u)
-			c.LoggedInMCUsers = append(c.LoggedInMCUsers[:idx], c.LoggedInMCUsers[idx+1:]...)
-			return
-		}
-	}
 }
 
 func WriteConfig() {
@@ -480,15 +448,6 @@ func WriteConfig() {
 	d = d + "},{\"name\":\"teleport\",\"enabled\":"
 	if c.FeatureTP {
 		d = d + "true"
-		// Output all TP Points
-		d = d + ",\"points\":["
-		for k, v := range c.TeleportPoints {
-			d = d + "{\"name\":\"" + k + "\",\"location:\"" + v + "\"}"
-		}
-		if len(c.TeleportPoints) > 0 {
-			d = d[:len(d)-1]
-		}
-		d = d + "]"
 	} else {
 		d = d + "false"
 	}
@@ -501,24 +460,4 @@ func WriteConfig() {
 	d = d + "}]}"
 	do := []byte(d)
 	ioutil.WriteFile(c.dir+"/mcman.config", do, 0664)
-}
-
-/*
-// TODO: This functions should be performed directly on the DB
-// from the listener
-func FindMCUser(name string, create bool) *MCUser {
-	for _, user := range c.MCUsers {
-		if user.Name == name {
-			return user
-		}
-	}
-	if create && name != "" {
-		return FindMCUser(name, false)
-	}
-	return NewMCUser("")
-}
-*/
-
-func GetConfig() *Config {
-	return c
 }

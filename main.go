@@ -101,11 +101,5 @@ func main() {
 			break
 		}
 		mu.Unlock()
-		//		fmt.Printf("Monitoring... (%d users)\n", len(GetConfig().LoggedInUsers))
-		//		for i, u := range GetConfig().LoggedInUsers {
-		//			if !u.HasQuota() {
-		//				fmt.Printf(">> User %s is out of quota\n", u.Name)
-		//			}
-		//		}
 	}
 }

@@ -1,3 +1,21 @@
 {{ define "body" }}
-    This is the home page!
+  <div class="pure-g center">
+    <h1 class="pure-u-1" style="text-align: center;">Online Users</h1>
+    <table class="pure-u-1 pure-table" id="online-users">
+      <thead>
+        <tr>
+          <th class="">User Name</th>
+          <th class="">Login Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range $i, $v := .Data.OnlineUsers }}
+        <tr>
+          <td>{{ $v.Name }}</td>
+          <td>{{ $v.LoginTime }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
 {{ end }}

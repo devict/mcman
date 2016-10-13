@@ -10,7 +10,7 @@ color: white;border-radius: 4px;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);}
 height:2.1em;overflow:hidden;-webkit-transition:height 0.5s;-moz-transition:height 0.5s;
 -ms-transition:height 0.5s;transition:height 0.5s;}
 .mcman-wrapper.open{height:14em;}
-.mcman-menu-3{text-align:right;}
+.mcman-menu{text-align:right;}
 .mcman-toggle{width:34px;height:34px;display:block;position:absolute;top:0;right:0;display:none;}
 .mcman-toggle .bar{background-color:#777;display:block;width:20px;height:2px;border-radius:100px;
 position:absolute;top:18px;right:7px;-webkit-transition:all 0.5s;-moz-transition:all 0.5s;

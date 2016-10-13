@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/gorilla/context"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/justinas/alice"
 )
 
 type WebUser struct {
@@ -36,34 +38,77 @@ func StartServer(dev bool) {
 	r.HandleFunc("/", index).Methods("GET")
 	r.HandleFunc("/login", login).Methods("GET")
 	r.HandleFunc("/dologin", doLogin).Methods("GET")
+	r.HandleFunc("/stop", doStop).Methods("GET")
 
 	a := r.PathPrefix("/api/v1").Subrouter()
 
-	a.HandleFunc("/whitelist", getWhitelist).Methods("GET")
-	a.HandleFunc("/ops", getOps).Methods("GET")
+	a.HandleFunc("/users/online", getOnlineUsers).Methods("GET")
+	a.HandleFunc("/users/whitelist", getWhitelist).Methods("GET")
+	a.HandleFunc("/users/ops", getOps).Methods("GET")
 	a.HandleFunc("/stop", postStop).Methods("POST")
 
+	chain := alice.New(loggingHandler).Then(r)
+
 	output <- "* Site running at localhost:8080\n"
-	http.ListenAndServe(":8080", context.ClearHandler(r))
+	http.ListenAndServe(":8080", chain)
+}
+
+type templateData struct {
+	Menu []menuItem
+}
+
+type menuItem struct {
+	Label    string
+	Location string
+	Icon     string
+}
+
+// createTemplateData Generates the Default template data
+// (menus, etc.) and adds all data from `addData` into it
+// as PageData
+func createTemplateData(addData interface{}) interface{} {
+	type pageData struct {
+		templateData
+		Data interface{}
+	}
+	ret := new(pageData)
+	ret.Menu = []menuItem{
+		{
+			Label:    "Home",
+			Location: "/",
+			Icon:     "",
+		}, {
+			Label:    "About",
+			Location: "/about",
+			Icon:     "",
+		}, {
+			// TODO: Check for admin
+			Label:    "Stop Server",
+			Location: "/stop",
+			Icon:     "",
+		},
+	}
+	ret.Data = addData
+	return ret
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	session, err := sessionStore.Get(r, "mcman_session")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	type indexData struct {
+		OnlineUsers []MCUser
 	}
-	isLoggedIn := session.Values["is_logged_in"]
-	if isLoggedIn == "" {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	var err error
+	tmpData := new(indexData)
+	if tmpData.OnlineUsers, err = c.model.getOnlineMCUsers(); err != nil {
+		fmt.Printf("> Error loading users: " + err.Error())
 	}
 
 	t := v.Tmpl("index")
-	fmt.Println(t.Execute(w, nil))
+	t.Execute(w, createTemplateData(tmpData))
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
 	t := v.Tmpl("login")
-	fmt.Println(t.Execute(w, nil))
+	t.Execute(w, nil)
 }
 
 func doLogin(w http.ResponseWriter, r *http.Request) {
@@ -78,9 +123,15 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 		session.Save(r, w)
 	}
 	t := v.Tmpl("index")
-	fmt.Println(t.Execute(w, nil))
+	t.Execute(w, nil)
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func doStop(w http.ResponseWriter, r *http.Request) {
+	DoStopServer()
+	t := v.Tmpl("stopped")
+	t.Execute(w, nil)
 }
 
 func serveAPI(w http.ResponseWriter, r *http.Request) string {
@@ -122,20 +173,36 @@ func getAuthJSON(mid func(http.ResponseWriter, *http.Request) string,
 	return ""
 }
 
+func getOnlineUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	var err error
+	var onlineUsers []MCUser
+	if onlineUsers, err = c.model.getOnlineMCUsers(); err != nil {
+		fmt.Fprintf(w, "{\"status\":\"error\",\"message\":\"Error loading online users\"}")
+	}
+	if err = json.NewEncoder(w).Encode(onlineUsers); err != nil {
+		log.Println(err)
+	}
+}
+
 func getOps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	if err := json.NewEncoder(w).Encode(GetConfig().Ops); err != nil {
+	if err := json.NewEncoder(w).Encode(c.Ops); err != nil {
 		log.Println(err)
 	}
 }
 
 func getWhitelist(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	if err := json.NewEncoder(w).Encode(GetConfig().Whitelist); err != nil {
+	if err := json.NewEncoder(w).Encode(c.Whitelist); err != nil {
 		log.Println(err)
 	}
 }
 
 func postStop(w http.ResponseWriter, r *http.Request) {
 	DoStopServer()
+}
+
+func loggingHandler(h http.Handler) http.Handler {
+	return handlers.LoggingHandler(os.Stdout, h)
 }
