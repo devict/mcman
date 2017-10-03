@@ -62,7 +62,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 				fmt.Println("Entered Passwords didn't match!")
 			}
 		}
-		if err := c.model.updateWebUser(&WebUser{Username: uName, Password: string(pw1)}); err != nil {
+		if err := c.model.updateWebUser(uName, string(pw1)); err != nil {
 			log.Fatal(err)
 		}
 	}

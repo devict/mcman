@@ -13,11 +13,6 @@ import (
 	"github.com/justinas/alice"
 )
 
-type WebUser struct {
-	Username string
-	Password string
-}
-
 var sessionStore = sessions.NewCookieStore([]byte("super_secret_secret :D"))
 
 var v view
@@ -115,9 +110,8 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 	login_user := r.FormValue("username")
 	login_pass := r.FormValue("password")
 
-	lu, _ := c.model.getWebUser(login_user)
-
-	if login_pass == lu.Password {
+	err := c.model.checkWebUserCreds(login_user, login_pass)
+	if err == nil {
 		session, _ := sessionStore.Get(r, "mcman_session")
 		session.Values["is_logged_in"] = login_user
 		session.Save(r, w)
@@ -125,7 +119,7 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 	t := v.Tmpl("index")
 	t.Execute(w, nil)
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	//http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func doStop(w http.ResponseWriter, r *http.Request) {

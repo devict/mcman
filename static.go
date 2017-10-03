@@ -191,7 +191,7 @@ var _escData = map[string]*_escFile{
 	"/public/css/mcman.css": {
 		local:   "public/css/mcman.css",
 		size:    1539,
-		modtime: 1476371015,
+		modtime: 1476969695,
 		compressed: `
 H4sIAAAJbogA/4SUT5OjLBDG734Kqt5Lpio4ajLJBC/vF9jTnvaIgkoN0BbgJrPWfPfFP2OiMdmqsQZ4
 noYf3U2yxjnQbU0ZE7ok7/Ul/QrCYRXbJs+5tdvvOTcGzDQ7U6N9zDS3PAfNqPlsgxwkGILOlXA8zcAw
@@ -369,7 +369,7 @@ AwAA
 	"/tmpls/_layout.go.html": {
 		local:   "tmpls/_layout.go.html",
 		size:    1365,
-		modtime: 1476370294,
+		modtime: 1476969695,
 		compressed: `
 H4sIAAAJbogA/7RUwW4bIRA9218x2eZYlqSRqipa+9A0h0i12kMuVZQDBnZ3EhZWwLpyI/97WSB2EjuW
 euheYOHNzHvDzFQn335c3f76eQ2t79R8WqVlUrWSifkUwld59ErOn55gqQx/hCL+F1DCZiPk6ubqFhao
@@ -387,7 +387,7 @@ oA7nNa+hAd6rwFx6DDUZizXL3k2deBiHzjb8bYsOehbSEVZtPAhZh0kkyulraiHqMw3HLfYenOW7KfLg
 	"/tmpls/index.go.html": {
 		local:   "tmpls/index.go.html",
 		size:    537,
-		modtime: 1476371135,
+		modtime: 1476969695,
 		compressed: `
 H4sIAAAJbogA/3RRwW6rMBC85ytWK44PENc84NRj1V7aD3DiLVhyTWUb1CjKv3fXIXWaNjdGMzszHo5H
 0PRmHAHuJn1AOJ02AK02C+ytCqHDj9lTOcCeXCSPPbPMj80Pei4bhBAPljqM9BlLZc3gtuvRf+yfnZWM
@@ -412,7 +412,7 @@ LJ7rCW2x3dDgY0zs57TCTnMxhnLGKfNZgGXoH4N7276pW0n90tR89ysAAP//TNbcHIQBAAA=
 	"/tmpls/stopped.go.html": {
 		local:   "tmpls/stopped.go.html",
 		size:    56,
-		modtime: 1476223779,
+		modtime: 1476969695,
 		compressed: `
 H4sIAAAJbogA/6quVkhJTcvMS1VQSspPqVRSqK3lUlCwyTC0C04tKkstUgguyS8oSE2x0QcKcQFVp+al
 gNQAAgAA///xp9MCOAAAAA==
