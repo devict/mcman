@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/br0xen/boltease"
 )
 
@@ -49,72 +51,61 @@ func (m *Model) getDatabase() {
 }
 
 /* Web Server Stuff */
-func (m *Model) getAllWebUsers() []WebUser {
-	var ret []WebUser
+func (m *Model) getAllWebUsers() []string {
+	var ret []string
 	if err := m.db.OpenDB(); err != nil {
-		// TODO: Log/output the error
 		return ret
 	}
 	defer m.db.CloseDB()
 
 	userBkts, err := m.db.GetBucketList(m.webUsersBucket)
 	if err != nil {
-		// TODO: Log/output the error
 		return ret
 	}
 	for i := range userBkts {
-		var uname, pw string
+		var uname string
 		userBktPath := append(m.webUsersBucket, userBkts[i])
 		if uname, err = m.db.GetValue(userBktPath, "username"); err != nil {
-			// TODO: Log/output the error
 			continue
 		}
-		if pw, err = m.db.GetValue(userBktPath, "password"); err != nil {
-			// TODO: Log/output the error
-			continue
-		}
-		ret = append(ret, WebUser{Username: uname, Password: pw})
+		ret = append(ret, uname)
 	}
 	return ret
 }
 
-func (m *Model) getWebUser(username string) (WebUser, error) {
-	var ret WebUser
+func (m *Model) checkWebUserCreds(username, pw string) error {
 	var err error
 	if err = m.db.OpenDB(); err != nil {
-		// TODO: Log/output the error
-		return ret, err
-	}
-	defer m.db.CloseDB()
-
-	userBucketPath := append(m.webUsersBucket, m.userPrefix+username)
-	var uname, pw string
-	uname, err = m.db.GetValue(userBucketPath, "username")
-	if err != nil {
-		return ret, errors.New("Error Getting User (" + username + "): " + err.Error())
-	}
-	pw, err = m.db.GetValue(userBucketPath, "password")
-	if err != nil {
-		return ret, errors.New("Error Getting User (" + username + "): " + err.Error())
-	}
-	ret = WebUser{Username: uname, Password: pw}
-	return ret, err
-}
-
-func (m *Model) updateWebUser(u *WebUser) error {
-	var err error
-	if err = m.db.OpenDB(); err != nil {
-		// TODO: Log/output the error
 		return err
 	}
 	defer m.db.CloseDB()
 
-	userBucketPath := append(m.webUsersBucket, m.userPrefix+u.Username)
-	if err = m.db.SetValue(userBucketPath, "username", u.Username); err != nil {
-		return errors.New("Error Updating User (" + u.Username + "): " + err.Error())
+	userBucketPath := append(m.webUsersBucket, m.userPrefix+username)
+	var uPw string
+	uPw, err = m.db.GetValue(userBucketPath, "password")
+	if err != nil {
+		return err
 	}
-	if err = m.db.SetValue(userBucketPath, "password", u.Password); err != nil {
-		return errors.New("Error Updating User (" + u.Username + "): " + err.Error())
+	return bcrypt.CompareHashAndPassword([]byte(uPw), []byte(pw))
+}
+
+func (m *Model) updateWebUser(uname, pw string) error {
+	var err error
+	if err = m.db.OpenDB(); err != nil {
+		return err
+	}
+	defer m.db.CloseDB()
+
+	userBucketPath := append(m.webUsersBucket, m.userPrefix+uname)
+	if err = m.db.SetValue(userBucketPath, "username", uname); err != nil {
+		return errors.New("Error Updating User (" + uname + "): " + err.Error())
+	}
+	cryptPw, cryptError := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if cryptError != nil {
+		return cryptError
+	}
+	if err = m.db.SetValue(userBucketPath, "password", string(cryptPw)); err != nil {
+		return errors.New("Error Updating User (" + uname + "): " + err.Error())
 	}
 	return err
 }

@@ -2,3 +2,6 @@ mcman
 *.db
 *.jar
 mcman.config
+
+# Store all server files here
+minecraft/

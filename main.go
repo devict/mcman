@@ -42,10 +42,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Build a string channel for stdout
-
-	// And a routine to keep the channel updated
+	// A routine to keep the channel updated
 	go func() {
+		var hasStarted bool
 		buf := make([]byte, 1024)
 		for {
 			n, err := stdout.Read(buf)
@@ -58,9 +57,12 @@ func main() {
 				// Error, break out of loop
 				break
 			}
+			hasStarted = true
 		}
 		fmt.Println("mcman stopping")
-
+		if !hasStarted {
+			fmt.Println("Couldn't get things running. Is minecraft available?")
+		}
 		DoStopServer()
 		close(output)
 	}()
