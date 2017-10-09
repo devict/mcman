@@ -22,3 +22,6 @@ position:absolute;top:18px;right:7px;-webkit-transition:all 0.5s;-moz-transition
 .mcman-toggle.x .bar:first-child{-webkit-transform:rotate(-45deg);-moz-transform:rotate(-45deg);
 -ms-transform:rotate(-45deg);transform:rotate(-45deg);}
 @media (max-width:47.999em){.custom-menu-3{text-align:left;}.custom-toggle{display:block;}
+.flash{position:absolute;width:100%;text-align:center;}
+.flash.success{background:rgb(28,184,65);}
+.flash.error{background-color:#F00;}

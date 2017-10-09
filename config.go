@@ -118,14 +118,15 @@ func LoadConfig(mm *MessageManager, dir string) {
 				if i.MCUser != nil && i.Text == "!set home\n" {
 					AddTempListener(func(inp *Message) bool {
 						listen_for := "Teleported " + i.MCUser.Name + " to "
-						if inp.MCUser.Name == "" && strings.Contains(inp.Text, listen_for) {
+						if inp.MCUser == nil && strings.Contains(inp.Text, listen_for) {
 							// Found the text
 							r := strings.Split(inp.Text, listen_for)
 							if len(r) > 0 {
 								p_str := r[1]
 								p_str = strings.Replace(p_str, ",", "", -1)
 								p_str = strings.Replace(p_str, "\n", "", -1)
-								/* TODO: Update User's Home in DB */
+								i.MCUser.Home = p_str
+								c.model.updateMCUser(i.MCUser)
 								mm.Tell(i.MCUser.Name, "Set your home to "+p_str, "blue")
 								return true
 							}
@@ -140,10 +141,8 @@ func LoadConfig(mm *MessageManager, dir string) {
 			// Add !home listener
 			AddListener(func(i *Message) bool {
 				if i.MCUser != nil && i.Text == "!home\n" {
-					// TODO: Lookup home in DB
-					home_str, found := "", false
-					if found {
-						mm.Output("tp " + i.MCUser.Name + " " + home_str)
+					if i.MCUser.Home != "" {
+						mm.Output("tp " + i.MCUser.Name + " " + i.MCUser.Home)
 					} else {
 						mm.Tell(i.MCUser.Name, "I don't know where your home is. Set it to your current position by typing '!set home'", "red")
 					}
@@ -155,50 +154,7 @@ func LoadConfig(mm *MessageManager, dir string) {
 		for _, option := range o {
 			opt_name, _ := option.GetString("name")
 			opt_enabled, _ := option.GetBoolean("enabled")
-			if opt_name == "home" {
-				/*
-					c.FeatureTPHome = opt_enabled
-					if opt_enabled {
-						fmt.Println("> Activating 'home' listeners")
-						// Add !set home listener
-						AddListener(func(i *Message) bool {
-							if i.MCUser.Name != "" && i.Text == "!set home\n" {
-								AddTempListener(func(inp *Message) bool {
-									listen_for := "Teleported " + i.MCUser.Name + " to "
-									if inp.MCUser.Name == "" && strings.Contains(inp.Text, listen_for) {
-										// Found the text
-										r := strings.Split(inp.Text, listen_for)
-										if len(r) > 0 {
-											p_str := r[1]
-											p_str = strings.Replace(p_str, ",", "", -1)
-											p_str = strings.Replace(p_str, "\n", "", -1)
-											SetHome(i.MCUser.Name, p_str)
-											mm.Tell(i.MCUser.Name, "Set your home to "+p_str, "blue")
-											return true
-										}
-									}
-									return false
-								})
-								mm.Output("tp " + i.MCUser.Name + " ~ ~ ~")
-								return true
-							}
-							return false
-						})
-						// Add !home listener
-						AddListener(func(i *Message) bool {
-							if i.MCUser.Name != "" && i.Text == "!home\n" {
-								home_str, found := GetHome(i.MCUser.Name)
-								if found {
-									mm.Output("tp " + i.MCUser.Name + " " + home_str)
-								} else {
-									mm.Tell(i.MCUser.Name, "I don't know where your home is. Set it to your current position by typing '!set home'", "red")
-								}
-							}
-							return false
-						})
-					}
-				*/
-			} else if opt_name == "visit" {
+			if opt_name == "visit" {
 				c.FeatureTPVisit = opt_enabled
 				if opt_enabled {
 					fmt.Println("> Activating 'visit' listeners")

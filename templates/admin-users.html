@@ -1,0 +1,26 @@
+<div class="bottom-space center">
+  <a id="btnAddUser" class="pure-button pure-button-success" href="/admin/users/new"><i class="fa fa-plus"></i> Add User</a>
+</div>
+{{ if .TemplateData.Users }}
+<table id="users-table" class="hidden sortable pure-table pure-table-bordered center">
+  <thead>
+      <tr>
+          <th>Login</th>
+          <th></th>
+      </tr>
+  </thead>
+  <tbody>
+      {{ range $i, $v := .TemplateData.Users }} 
+      <tr>
+          <td>{{ $v }}</td>
+          <td>
+            <a href="/admin/users/{{ $v }}/edit" class="pure-button pure-button-plain"><i class="fa fa-pencil"></i></a>
+            <a href="/admin/users/{{ $v }}/delete" class="pure-button pure-button-plain"><i class="fa fa-trash"></i></a>
+          </td>
+      </tr>
+      {{ end }}
+  </tbody>
+</table>
+{{ else }}
+<div>No users in the system</div>
+{{ end }}

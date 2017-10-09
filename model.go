@@ -135,6 +135,7 @@ func (m *Model) mcFeatureIsEnabled(opt string) bool {
 	defer m.db.CloseDB()
 
 	cfgOption := m.configFeaturePrefix + opt
+
 	if ret, err = m.db.GetBool(m.mcConfigBucket, cfgOption); err != nil {
 		// TODO: Log/output the error
 		return false

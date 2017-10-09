@@ -75,7 +75,7 @@ func main() {
 		for s := range output {
 			m := NewMessage(s)
 			fmt.Printf("\x1b[34;1m%s\x1b[0m", m.Output())
-			mm.ProcessMessage(s)
+			mm.ProcessMessage(m)
 		}
 	}()
 

@@ -16,7 +16,7 @@ type Message struct {
 func NewMessage(t string) *Message {
 	var err error
 	m := new(Message)
-	msg_user := regexp.MustCompile("^<[^>]+>")
+	msg_user := regexp.MustCompile("<[^>]+>")
 	tmpMCUser := msg_user.FindString(t)
 	tmpMCUser = strings.Replace(tmpMCUser, "<", "", -1)
 	tmpMCUser = strings.Replace(tmpMCUser, ">", "", -1)

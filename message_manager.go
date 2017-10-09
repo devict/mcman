@@ -47,12 +47,12 @@ func (mm MessageManager) Tell(user string, what string, color string) {
 		color = "white"
 	}
 	strings.Replace(what, "\n", "", -1)
-	o := "tellraw " + user + " {text:\"" + what + "\",color:" + color + "}"
+	o := "tellraw " + user + " {\"text\":\"" + what + "\",\"color\":\"" + color + "\"}"
 	mm.Output(o)
 }
 
 func (mm MessageManager) TellRaw(user string, what string) {
-	o := "tellraw " + user + " {text:\"" + what + "\"}"
+	o := "tellraw " + user + " {\"text\":\"" + what + "\"}"
 	mm.Output(o)
 }
 
@@ -64,9 +64,7 @@ func (mm MessageManager) Output(o string) {
 	fmt.Printf("%s", o)
 }
 
-func (mm MessageManager) ProcessMessage(inp string) bool {
-	// First of all, create the message from inp
-	m := NewMessage(inp)
+func (mm MessageManager) ProcessMessage(m *Message) bool {
 	// Now run the message through all of mm's tempListeners
 	for i := range TempListeners {
 		// Pop the listener off of the stack
