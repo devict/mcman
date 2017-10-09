@@ -28,8 +28,7 @@ var site *siteData
 
 // pageData is stuff that changes per request (and the site data)
 type pageData struct {
-	Site *siteData
-
+	Site          *siteData
 	Title         string
 	SubTitle      string
 	Stylesheets   []string
