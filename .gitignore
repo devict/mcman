@@ -5,3 +5,6 @@ mcman.config
 
 # Store all server files here
 minecraft/
+
+# A script to make running the binary with a directory easier
+mcman.sh
